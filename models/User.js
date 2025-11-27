@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 
-// In your User model, add favourites array:
 const userSchema = new mongoose.Schema({
   email: {
     type: String,
@@ -19,6 +18,7 @@ const userSchema = new mongoose.Schema({
     {
       score: { type: Number, required: true },
       category: { type: String, required: true },
+      correctAnswers: { type: Number, default: 0 }, // ✅ NEW: Track correct answers
       date: { type: Date, default: Date.now },
     },
   ],
@@ -31,6 +31,10 @@ const userSchema = new mongoose.Schema({
       addedAt: { type: Date, default: Date.now }
     }
   ],
+  diamonds: { 
+    type: Number, 
+    default: 0 // ✅ NEW: User's diamond balance
+  },
   createdAt: {
     type: Date,
     default: Date.now,

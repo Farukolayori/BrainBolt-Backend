@@ -27,6 +27,7 @@ router.post("/signup", async (req, res) => {
       email,
       fullName,
       password: hashedPassword,
+      diamonds: 0, // ✅ Initialize diamonds at 0
     });
 
     await newUser.save();
@@ -44,6 +45,7 @@ router.post("/signup", async (req, res) => {
       email: newUser.email,
       fullName: newUser.fullName,
       scores: newUser.scores,
+      diamonds: newUser.diamonds, // ✅ Include diamonds
       createdAt: newUser.createdAt,
     };
 
@@ -98,6 +100,7 @@ router.post("/login", async (req, res) => {
       email: user.email,
       fullName: user.fullName,
       scores: user.scores,
+      diamonds: user.diamonds || 0, // ✅ Include diamonds (with fallback)
       createdAt: user.createdAt,
     };
 

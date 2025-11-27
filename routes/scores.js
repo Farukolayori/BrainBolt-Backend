@@ -21,10 +21,10 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-// Save quiz score
+// ✅ UPDATED: Save quiz score and award diamonds
 router.post("/", authenticateToken, async (req, res) => {
   try {
-    const { score, category } = req.body;
+    const { score, category, correctAnswers } = req.body;
 
     if (score === undefined || !category) {
       return res.status(400).json({ 
@@ -41,13 +41,27 @@ router.post("/", authenticateToken, async (req, res) => {
       });
     }
 
-    user.scores.push({ score, category });
+    // ✅ Calculate diamonds earned (5 per correct answer)
+    const diamondsEarned = (correctAnswers || 0) * 5;
+
+    // Add score to user's scores array with correctAnswers
+    user.scores.push({ 
+      score, 
+      category,
+      correctAnswers: correctAnswers || 0 // ✅ Store correct answers
+    });
+
+    // ✅ Award diamonds to user
+    user.diamonds = (user.diamonds || 0) + diamondsEarned;
+
     await user.save();
 
     res.status(201).json({
       success: true,
       message: "Score saved successfully",
       score: user.scores[user.scores.length - 1],
+      diamondsEarned, // ✅ Return diamonds earned this quiz
+      totalDiamonds: user.diamonds, // ✅ Return total diamonds
     });
   } catch (error) {
     console.error("Score save error:", error);
@@ -58,10 +72,10 @@ router.post("/", authenticateToken, async (req, res) => {
   }
 });
 
-// Get all scores for a user
+// ✅ UPDATED: Get all scores for a user (including diamonds)
 router.get("/", authenticateToken, async (req, res) => {
   try {
-    const user = await User.findById(req.userId).select("scores");
+    const user = await User.findById(req.userId).select("scores diamonds");
     if (!user) {
       return res.status(404).json({ 
         success: false,
@@ -70,13 +84,37 @@ router.get("/", authenticateToken, async (req, res) => {
     }
     res.json({ 
       success: true,
-      scores: user.scores 
+      scores: user.scores,
+      diamonds: user.diamonds || 0 // ✅ Include diamonds in response
     });
   } catch (error) {
     console.error("Scores fetch error:", error);
     res.status(500).json({ 
       success: false,
       message: "Server error fetching scores" 
+    });
+  }
+});
+
+// ✅ NEW: Get user's diamond balance only
+router.get("/diamonds", authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.userId).select("diamonds");
+    if (!user) {
+      return res.status(404).json({ 
+        success: false,
+        message: "User not found" 
+      });
+    }
+    res.json({ 
+      success: true,
+      diamonds: user.diamonds || 0
+    });
+  } catch (error) {
+    console.error("Diamonds fetch error:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Server error fetching diamonds" 
     });
   }
 });
